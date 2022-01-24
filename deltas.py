@@ -20,13 +20,13 @@ def main():
     df_bfore.columns = [c.replace("(", "") for c in df_bfore.columns]
     df_bfore.columns = [c.replace(")", "") for c in df_bfore.columns]
     
-    df_bfore = df_bfore[["JIRA", \
-                         "New Functionality Title", \
-                         "Whats New Item", "Feature", \
+    df_bfore = df_bfore[["Whats New Item", \
+                         "Feature", \
                          "Feature Description", \
                          "Community Post", \
                          "Functional Areas", \
                          "Setup Effort", \
+                         "New Functionality Title", \
                          "New Functionality", \
                          "Training & Testing Impact", \
                          "Tenant", \
@@ -36,7 +36,9 @@ def main():
                          "Web Services", \
                          "Security Domains", \
                          "Current Name", \
-                         "Former Name"]]
+                         "Former Name", \
+                         "JIRA" ]]
+    df_bfore.fillna('', inplace=True)    
     
     df_bfore = df_bfore.sort_values(by=["JIRA", "New Functionality Title"])
 
@@ -49,13 +51,13 @@ def main():
     df_after.columns = [c.replace("(", "") for c in df_after.columns]
     df_after.columns = [c.replace(")", "") for c in df_after.columns]
     
-    df_after = df_after[["JIRA", \
-                         "New Functionality Title", \
-                         "Whats New Item", "Feature", \
+    df_after = df_after[["Whats New Item", \
+                         "Feature", \
                          "Feature Description", \
                          "Community Post", \
                          "Functional Areas", \
                          "Setup Effort", \
+                         "New Functionality Title", \
                          "New Functionality", \
                          "Training & Testing Impact", \
                          "Tenant", \
@@ -65,272 +67,182 @@ def main():
                          "Web Services", \
                          "Security Domains", \
                          "Current Name", \
-                         "Former Name"]]
+                         "Former Name", \
+                         "JIRA" ]]
+    df_after.fillna('', inplace=True)
     
     df_after = df_after.sort_values(by=["JIRA", "New Functionality Title"])
 
-    df_diff = df_bfore != df_after
-
-    
-    
     writer = pd.ExcelWriter(output_xls, engine = 'xlsxwriter')
-
-    df_diff = pd.merge(df_bfore, df_after, how='outer', indicator=True)
-
-    tab = 'Diff'
-    df_diff.to_excel(writer, sheet_name = tab, index=False, header=False, startrow=1)
-    for column in df_diff:
-        column_width = max(df_diff[column].astype(str).map(len).max(), len(column))
-        col_idx = df_diff.columns.get_loc(column)
-        writer.sheets[tab].set_column(col_idx, col_idx, column_width)    
-    column_settings1 = [{'header': column} for column in df_diff.columns]
-    (max_row, max_col) = df_diff.shape
-    worksheet1 = writer.sheets[tab]
-    worksheet1.add_table(0, 0, max_row, max_col - 1, {'columns': column_settings1})
-    worksheet1.freeze_panes(1, 1)
-
-    tab = 'Before'
-    df_bfore.to_excel(writer, sheet_name = tab, index=False, header=False, startrow=1)
-    for column in df_bfore:
-        column_width = max(df_bfore[column].astype(str).map(len).max(), len(column))
-        col_idx = df_bfore.columns.get_loc(column)
-        writer.sheets[tab].set_column(col_idx, col_idx, column_width)    
-    column_settings1 = [{'header': column} for column in df_bfore.columns]
-    (max_row, max_col) = df_bfore.shape
-    worksheet1 = writer.sheets[tab]
-    worksheet1.add_table(0, 0, max_row, max_col - 1, {'columns': column_settings1})
-    worksheet1.freeze_panes(1, 1)
-
-    tab = 'After'
-    df_after.to_excel(writer, sheet_name = tab, index=False, header=False, startrow=1)
-    for column in df_after:
-        column_width = max(df_after[column].astype(str).map(len).max(), len(column))
-        col_idx = df_after.columns.get_loc(column)
-        writer.sheets[tab].set_column(col_idx, col_idx, column_width)    
-    column_settings1 = [{'header': column} for column in df_after.columns]
-    (max_row, max_col) = df_after.shape
-    worksheet1 = writer.sheets[tab]
-    worksheet1.add_table(0, 0, max_row, max_col - 1, {'columns': column_settings1})
-    worksheet1.freeze_panes(1, 1)
-
-    writer.save()
     
+    df_new = pd.DataFrame()
+    df_chg = pd.DataFrame()
     
+    list_new = []
+    list_chg = []
+    list_headers = ["Whats New Item", \
+                    "Feature", \
+                    "Feature Description", \
+                    "Community Post", \
+                    "Functional Areas", \
+                    "Setup Effort", \
+                    "New Functionality Title", \
+                    "New Functionality", \
+                    "Training & Testing Impact", \
+                    "Tenant", \
+                    "Tentative Production Date", \
+                    "Business Processes", \
+                    "Tasks", \
+                    "Web Services", \
+                    "Security Domains", \
+                    "Current Name", \
+                    "Former Name", \
+                    "JIRA"]
 
-    '''    
-
+    for Index_Of_After in df_after.index:
     
-    df_after = df_after.sort_values(by=["Members__Members", \
-                                        "Security_Group", \
-                                        "Members__Position", \
-                                        "Members__Business_Title", \
-                                        "Members__Supervisory_Organization"])
-    df_after = df_after[df_after[['Members__Workday_Account']].notnull().all(1)]  # drops nans
-    df_after = df_after.loc[(df_after.User_Based == "YES") & \
-                            #(df_after.Members__Members == "Hari Mailvaganam") & \
-                            #(df_after.Members__Members == "Aarif Khan") | \
-                            #(df_after.Members__Members == "Aaron Boley") & \
-                            (~df_after.Members__Workday_Account.str.contains("ISU_")) & \
-                            (~df_after.Members__Workday_Account.str.contains("wd-")) & \
-                            (~df_after.Members__Workday_Account.str.contains("-impl")) & \
-                            (df_after.Members__Account_Inactive == 0) & \
-                            (df_after.Active_Worker == "Active")]
-
-    df_after_1 = df_after.loc[:, ['Members__Workday_Account', \
-                                  'Members__Members', \
-                                  'Security_Group', \
-                                  'Members__Position', \
-                                  'Members__Business_Title', \
-                                  'Members__Supervisory_Organization']]
-
-    df_distinct_members_wd_acct = df_after_1["Members__Workday_Account"].unique()
-    
-    # Check if rows in df_after_1 is NOT ISC - if true then add this to df_non_isc dataframe
-    df_all_non_isc = df_after_1.loc[(~df_after_1.Members__Supervisory_Organization.str.contains("Integrated Service Centre")) & \
-                                    #(~df_after_1.Members__Supervisory_Organization.str.contains("Integrated Serviec Centre")) & \
-                                    (~df_after_1.Members__Business_Title.str.contains("ISC"))]
-
-    ########
-
-    with warnings.catch_warnings(record=True):
-        warnings.simplefilter("always")
-        df_bfore = pd.read_excel(fn_bfore + ".xlsx", "Privileged SGs, Worker Accounts", header=0, engine="openpyxl")
-
-    df_bfore.columns = [c.replace(' ', '_') for c in df_bfore.columns]
-    df_bfore.columns = [c.replace(':', '_') for c in df_bfore.columns]
-    df_bfore.columns = [c.replace('-', '_') for c in df_bfore.columns]
-    df_bfore = df_bfore.sort_values(by=["Members__Members", \
-                                        "Security_Group", \
-                                        "Members__Position", \
-                                        "Members__Business_Title", \
-                                        "Members__Supervisory_Organization"])
-    df_bfore = df_bfore[df_bfore[['Members__Workday_Account']].notnull().all(1)]  # drops nans
-    df_bfore = df_bfore.loc[(df_bfore.User_Based == "YES") & \
-                            #(df_bfore.Members__Members == "Hari Mailvaganam") & \
-                            #(df_bfore.Members__Members == "Aarif Khan") | \
-                            #(df_bfore.Members__Members == "Aaron Boley") & \
-                            (~df_bfore.Members__Workday_Account.str.contains("ISU_")) & \
-                            (~df_bfore.Members__Workday_Account.str.contains("wd-")) & \
-                            (~df_bfore.Members__Workday_Account.str.contains("-impl")) & \
-                            (df_bfore.Members__Account_Inactive == 0) & \
-                            (df_bfore.Active_Worker == "Active")]
-    df_bfore_1 = df_bfore.loc[:, ['Members__Workday_Account', \
-                                  'Members__Members', \
-                                  'Security_Group', \
-                                  'Members__Position', \
-                                  'Members__Business_Title', \
-                                  'Members__Supervisory_Organization']]
-
-    #df_new_add = pd.DataFrame()
-    df_diff = pd.DataFrame()
-    df_diff_old = pd.DataFrame()
-    df_diff_new = pd.DataFrame()
-
-    #orow = 0
-    for key in df_distinct_members_wd_acct:
-        #print(key)
-        #ws_out.write(orow, 0, key, style0)
-        #orow += 1
-        df_compare = pd.DataFrame()
-        df_after_2 = df_after_1.loc[(df_after_1.Members__Workday_Account == key)]
-        df_after_2 = df_after_2.reset_index(drop=True)
-        df_bfore_2 = df_bfore_1.loc[(df_bfore_1.Members__Workday_Account == key)]
-        df_bfore_2 = df_bfore_2.reset_index(drop=True)
-        # Check if df_bfore is empty.  If it is then it means this is a new employee
-        #if df_bfore_2.empty:
-        #    df_new_add = df_new_add.append(df_after_2)
-        #else:
-        #df_compare = df_after_2[df_bfore_2.ne(df_after_2).any(axis=1)]
+        #
+        # Find rows in After that is not in Bfore
+        #
         
-        # Search for after rows that are not in, or different from bfore
-        df_compare = df_after_2 # We will delete rows that have no differences
-        for inda in df_after_2.index:
-            Found = False
-            for indb in df_bfore_2.index:
-                if ((df_bfore_2['Security_Group'][indb] == df_after_2['Security_Group'][inda]) & \
-                    (df_bfore_2['Members__Position'][indb] == df_after_2['Members__Position'][inda]) & \
-                    (df_bfore_2['Members__Business_Title'][indb] == df_after_2['Members__Business_Title'][inda])):
-                    #(df_bfore_2['Members__Supervisory_Organization'][indb] == df_after_2['Members__Supervisory_Organization'][inda])):
-                    Found = True
-                    break
-            if Found:
-                # Exact matching row found - remove from diff
-                df_compare = df_compare.drop(axis=1, index=inda)
-        if not df_compare.empty:
-            # This means there are deltas for this person between before and after
-            df_compare = df_compare.reset_index(drop=True)
-            df_compare = df_compare.sort_values(by=["Members__Members", \
-                                "Security_Group", \
-                                "Members__Position", \
-                                "Members__Business_Title", \
-                                "Members__Supervisory_Organization"])
-            df_diff = df_diff.append(df_compare)
-            df_diff_old = df_diff_old.append(df_bfore_2)
-            df_diff_new = df_diff_new.append(df_after_2)
+        df_existing = df_bfore[(df_bfore['JIRA']==df_after['JIRA'][Index_Of_After]) \
+                          & (df_bfore['New Functionality Title']==df_after['New Functionality Title'][Index_Of_After])]
+        list_existing = (df_bfore[(df_bfore['JIRA']==df_after['JIRA'][Index_Of_After]) \
+                          & (df_bfore['New Functionality Title']==df_after['New Functionality Title'][Index_Of_After])]).values.tolist()
+        
+        if df_existing.empty:
 
-    if not df_diff.empty:
-        df_diff = df_diff.drop(labels='Members__Workday_Account', axis=1)
-        df_diff.rename(columns={'Members__Members':'Member', \
-                      'Security_Group':'Security Group', \
-                      'Members__Position':'Position (New)', \
-                      'Members__Business_Title':'Business Title (New)', \
-                      'Members__Supervisory_Organization':'Sup Org (New)'}, \
-                      inplace=True)
-    if not df_diff_old.empty:
-        df_diff_old = df_diff_old.drop(labels='Members__Workday_Account', axis=1)
-        df_diff_old.rename(columns={'Members__Members':'Member', \
-                      'Security_Group':'Security Group', \
-                      'Members__Position':'Position', \
-                      'Members__Business_Title':'Business Title', \
-                      'Members__Supervisory_Organization':'Sup Org'}, \
-                      inplace=True)
-    if not df_diff_new.empty:
-        df_diff_new = df_diff_new.drop(labels='Members__Workday_Account', axis=1)
-        df_diff_new.rename(columns={'Members__Members':'Member', \
-                      'Security_Group':'Security Group', \
-                      'Members__Position':'Position', \
-                      'Members__Business_Title':'Business Title', \
-                      'Members__Supervisory_Organization':'Sup Org'}, \
-                      inplace=True)
-    #if not df_new_add.empty:
-    #    df_new_add = df_new_add.drop(labels='Members__Workday_Account', axis=1)
-    #    df_new_add.rename(columns={'Members__Members':'Member', \
-    #                  'Security_Group':'Security Group', \
-    #                  'Members__Position':'Position', \
-    #                  'Members__Business_Title':'Business Title', \
-    #                  'Members__Supervisory_Organization':'Sup Org'}, \
-    #                  inplace=True)
-    if not df_all_non_isc.empty:
-        df_all_non_isc = df_all_non_isc.drop(labels='Members__Workday_Account', axis=1)
-        df_all_non_isc.rename(columns={'Members__Members':'Member', \
-                      'Security_Group':'Security Group', \
-                      'Members__Position':'Position', \
-                      'Members__Business_Title':'Business Title', \
-                      'Members__Supervisory_Organization':'Sup Org'}, \
-                      inplace=True)
+            #
+            # Place in New sheet.
+            # This is a new row. Place in original order.
+            #
+            list_new.append([df_after['Whats New Item'][Index_Of_After], \
+                             df_after['Feature'][Index_Of_After], \
+                             df_after['Feature Description'][Index_Of_After], \
+                             df_after['Community Post'][Index_Of_After], \
+                             df_after['Functional Areas'][Index_Of_After], \
+                             df_after['Setup Effort'][Index_Of_After], \
+                             df_after['New Functionality Title'][Index_Of_After], \
+                             df_after['New Functionality'][Index_Of_After], \
+                             df_after['Training & Testing Impact'][Index_Of_After], \
+                             df_after['Tenant'][Index_Of_After], \
+                             df_after['Tentative Production Date'][Index_Of_After], \
+                             df_after['Business Processes'][Index_Of_After], \
+                             df_after['Tasks'][Index_Of_After], \
+                             df_after['Web Services'][Index_Of_After], \
+                             df_after['Security Domains'][Index_Of_After], \
+                             df_after['Current Name'][Index_Of_After], \
+                             df_after['Former Name'][Index_Of_After], \
+                             df_after['JIRA'][Index_Of_After] \
+                             ])
+        
+        else:  # Check if there is a change in any of the fields except for the indexes
 
-    #df_final.to_excel('pam_output.xls', index=False, header=False)
-    writer = pd.ExcelWriter(output_xls, engine = 'xlsxwriter')
+            Changes = ""
+            for Index_Of_Header, Field in enumerate(list_headers):
+                if list_existing[0][Index_Of_Header] != df_after[Field][Index_Of_After]:
+                    if Changes == "":
+                        Changes = Changes + Field
+                    else:
+                        Changes = Changes + ", " + Field
+                    # endif
+                # endif
+            # endfor
+            
+            if Changes != "":  # There have been some changes for this existing row
+                list_chg.append([Changes, \
+                                 df_after['Whats New Item'][Index_Of_After], \
+                                 df_after['Feature'][Index_Of_After], \
+                                 df_after['Feature Description'][Index_Of_After], \
+                                 df_after['Community Post'][Index_Of_After], \
+                                 df_after['Functional Areas'][Index_Of_After], \
+                                 df_after['Setup Effort'][Index_Of_After], \
+                                 df_after['New Functionality Title'][Index_Of_After], \
+                                 df_after['New Functionality'][Index_Of_After], \
+                                 df_after['Training & Testing Impact'][Index_Of_After], \
+                                 df_after['Tenant'][Index_Of_After], \
+                                 df_after['Tentative Production Date'][Index_Of_After], \
+                                 df_after['Business Processes'][Index_Of_After], \
+                                 df_after['Tasks'][Index_Of_After], \
+                                 df_after['Web Services'][Index_Of_After], \
+                                 df_after['Security Domains'][Index_Of_After], \
+                                 df_after['Current Name'][Index_Of_After], \
+                                 df_after['Former Name'][Index_Of_After], \
+                                 df_after['JIRA'][Index_Of_After] \
+                                 ])
+            # endif
+        # endif - check if Index_Of_After exists
+        
+    # endfor
 
-    df_diff.to_excel(writer, sheet_name = 'Deltas', index=False, header=False, startrow=1)
-    for column in df_diff:
-        column_width = max(df_diff[column].astype(str).map(len).max(), len(column))
-        col_idx = df_diff.columns.get_loc(column)
-        writer.sheets['Deltas'].set_column(col_idx, col_idx, column_width)    
-    column_settings1 = [{'header': column} for column in df_diff.columns]
-    (max_row, max_col) = df_diff.shape
-    worksheet1 = writer.sheets['Deltas']
+    df_new = pd.DataFrame(list_new, columns = [ \
+                             'Whats New Item', \
+                             'Feature', \
+                             'Feature Description', \
+                             'Community Post', \
+                             'Functional Areas', \
+                             'Setup Effort', \
+                             'New Functionality Title', \
+                             'New Functionality', \
+                             'Training & Testing Impact', \
+                             'Tenant', \
+                             'Tentative Production Date', \
+                             'Business Processes', \
+                             'Tasks', \
+                             'Web Services', \
+                             'Security Domains', \
+                             'Current Name', \
+                             'Former Name', \
+                             'JIRA' \
+                             ])
+
+    df_chg = pd.DataFrame(list_chg, columns = [ \
+                             'What Changed?', \
+                             'Whats New Item', \
+                             'Feature', \
+                             'Feature Description', \
+                             'Community Post', \
+                             'Functional Areas', \
+                             'Setup Effort', \
+                             'New Functionality Title', \
+                             'New Functionality', \
+                             'Training & Testing Impact', \
+                             'Tenant', \
+                             'Tentative Production Date', \
+                             'Business Processes', \
+                             'Tasks', \
+                             'Web Services', \
+                             'Security Domains', \
+                             'Current Name', \
+                             'Former Name', \
+                             'JIRA' \
+                             ])
+
+    tab = 'New Additions'
+    df_new.to_excel(writer, sheet_name = tab, index=False, header=False, startrow=1)
+    for column in df_new:
+        column_width = max(df_new[column].astype(str).map(len).max(), len(column))
+        col_idx = df_new.columns.get_loc(column)
+        writer.sheets[tab].set_column(col_idx, col_idx, column_width)    
+    column_settings1 = [{'header': column} for column in df_new.columns]
+    (max_row, max_col) = df_new.shape
+    worksheet1 = writer.sheets[tab]
     worksheet1.add_table(0, 0, max_row, max_col - 1, {'columns': column_settings1})
-    worksheet1.freeze_panes(1, 1)
+    worksheet1.freeze_panes(1, 0)
 
-    df_diff_old.to_excel(writer, sheet_name = fn_bfore, index=False, header=False, startrow=1)
-    for column in df_diff_old:
-        column_width = max(df_diff_old[column].astype(str).map(len).max(), len(column))
-        col_idx = df_diff_new.columns.get_loc(column)
-        writer.sheets[fn_bfore].set_column(col_idx, col_idx, column_width)    
-    column_settings1 = [{'header': column} for column in df_diff_old.columns]
-    (max_row, max_col) = df_diff_old.shape
-    worksheet1 = writer.sheets[fn_bfore]
-    worksheet1.add_table(0, 0, max_row, max_col - 1, {'columns': column_settings1})
-    worksheet1.freeze_panes(1, 1)
-
-    df_diff_new.to_excel(writer, sheet_name = fn_after, index=False, header=False, startrow=1)
-    for column in df_diff_new:
-        column_width = max(df_diff_new[column].astype(str).map(len).max(), len(column))
-        col_idx = df_diff_old.columns.get_loc(column)
-        writer.sheets[fn_after].set_column(col_idx, col_idx, column_width)    
-    column_settings1 = [{'header': column} for column in df_diff_new.columns]
-    (max_row, max_col) = df_diff_new.shape
-    worksheet1 = writer.sheets[fn_after]
-    worksheet1.add_table(0, 0, max_row, max_col - 1, {'columns': column_settings1})
-    worksheet1.freeze_panes(1, 1)
-
-    #df_new_add.to_excel(writer, sheet_name = 'New Additions', index=False, header=False, startrow=1)
-    #for column in df_new_add:
-    #    column_width = max(df_new_add[column].astype(str).map(len).max(), len(column))
-    #    col_idx = df_new_add.columns.get_loc(column)
-    #    writer.sheets['New Additions'].set_column(col_idx, col_idx, column_width)    
-    #column_settings2 = [{'header': column} for column in df_new_add.columns]
-    #(max_row, max_col) = df_new_add.shape
-    #worksheet2 = writer.sheets['New Additions']
-    #worksheet2.add_table(0, 0, max_row, max_col - 1, {'columns': column_settings2})
-    #worksheet2.freeze_panes(1, 1)
-    
-    df_all_non_isc.to_excel(writer, sheet_name = 'All Non-ISC', index=False, header=False, startrow=1)
-    for column in df_all_non_isc:
-        column_width = max(df_all_non_isc[column].astype(str).map(len).max(), len(column))
-        col_idx = df_all_non_isc.columns.get_loc(column)
-        writer.sheets['All Non-ISC'].set_column(col_idx, col_idx, column_width)    
-    column_settings1 = [{'header': column} for column in df_all_non_isc.columns]
-    (max_row, max_col) = df_all_non_isc.shape
-    worksheet1 = writer.sheets['All Non-ISC']
+    tab = 'New Changes to Previous'
+    df_chg.to_excel(writer, sheet_name = tab, index=False, header=False, startrow=1)
+    for column in df_chg:
+        column_width = max(df_chg[column].astype(str).map(len).max(), len(column))
+        col_idx = df_chg.columns.get_loc(column)
+        writer.sheets[tab].set_column(col_idx, col_idx, column_width)    
+    column_settings1 = [{'header': column} for column in df_chg.columns]
+    (max_row, max_col) = df_chg.shape
+    worksheet1 = writer.sheets[tab]
     worksheet1.add_table(0, 0, max_row, max_col - 1, {'columns': column_settings1})
     worksheet1.freeze_panes(1, 1)
 
     writer.save()
-    #writer.close()
-    '''
 
 if __name__ == '__main__':
     main()
-
