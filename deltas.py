@@ -8,7 +8,7 @@ def main():
 
     output_xls = r"whats_new_deltas.xlsx"
 
-    fn_after = "Whats_New_in_Workday_2022R1_20220121_changed"
+    fn_after = "Whats_New_in_Workday_2022R1_20220121_same"
     fn_bfore = "Whats_New_in_Workday_2022R1_20220121"
 
     with warnings.catch_warnings(record=True):
@@ -220,29 +220,35 @@ def main():
 
     tab = 'New Additions'
     df_new.to_excel(writer, sheet_name = tab, index=False, header=False, startrow=1)
-    for column in df_new:
-        column_width = max(df_new[column].astype(str).map(len).max(), len(column))
-        col_idx = df_new.columns.get_loc(column)
-        writer.sheets[tab].set_column(col_idx, col_idx, column_width)    
-    column_settings1 = [{'header': column} for column in df_new.columns]
-    (max_row, max_col) = df_new.shape
-    worksheet1 = writer.sheets[tab]
-    worksheet1.add_table(0, 0, max_row, max_col - 1, {'columns': column_settings1})
-    worksheet1.freeze_panes(1, 0)
+    if not df_new.empty:
+        for column in df_new:
+            column_width = max(df_new[column].astype(str).map(len).max(), len(column))
+            col_idx = df_new.columns.get_loc(column)
+            writer.sheets[tab].set_column(col_idx, col_idx, column_width)
+        column_settings1 = [{'header': column} for column in df_new.columns]
+        (max_row, max_col) = df_new.shape
+        worksheet1 = writer.sheets[tab]
+        worksheet1.add_table(0, 0, max_row, max_col - 1, {'columns': column_settings1})
+        worksheet1.freeze_panes(1, 0)
+    # endif not empty
 
     tab = 'New Changes to Previous'
     df_chg.to_excel(writer, sheet_name = tab, index=False, header=False, startrow=1)
-    for column in df_chg:
-        column_width = max(df_chg[column].astype(str).map(len).max(), len(column))
-        col_idx = df_chg.columns.get_loc(column)
-        writer.sheets[tab].set_column(col_idx, col_idx, column_width)    
-    column_settings1 = [{'header': column} for column in df_chg.columns]
-    (max_row, max_col) = df_chg.shape
-    worksheet1 = writer.sheets[tab]
-    worksheet1.add_table(0, 0, max_row, max_col - 1, {'columns': column_settings1})
-    worksheet1.freeze_panes(1, 1)
+    if not df_chg.empty:
+        for column in df_chg:
+            column_width = max(df_chg[column].astype(str).map(len).max(), len(column))
+            col_idx = df_chg.columns.get_loc(column)
+            writer.sheets[tab].set_column(col_idx, col_idx, column_width)    
+        column_settings1 = [{'header': column} for column in df_chg.columns]
+        (max_row, max_col) = df_chg.shape
+        worksheet1 = writer.sheets[tab]
+        worksheet1.add_table(0, 0, max_row, max_col - 1, {'columns': column_settings1})
+        worksheet1.freeze_panes(1, 1)
+    # endif not empty
 
     writer.save()
 
 if __name__ == '__main__':
     main()
+
+
